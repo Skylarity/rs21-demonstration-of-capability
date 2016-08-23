@@ -4,11 +4,5 @@ $(document).ready(function() {
 	var map = L.mapbox.map("censusmap", "mapbox.streets");
 	map.setView([35.0440093, -106.9530535], 10);
 
-	var linePoints = [
-		[35.0, -106.9],
-		[35.1, -107.0],
-		[35.2, -106.5]
-	];
-
-	var polygon = L.polygon(linePoints, {color: "#000"}).addTo(map);
+	var featureLayer = L.mapbox.featureLayer().loadURL('data/BernallioCensusBlocks_Joined.json').addTo(map);
 });
