@@ -4,5 +4,10 @@ $(document).ready(function() {
 	var map = L.mapbox.map("censusmap", "mapbox.streets");
 	map.setView([35.0178, -106.6291], 11);
 
-	var featureLayer = L.mapbox.featureLayer().loadURL('data/BernallioCensusBlocks_Joined.json').addTo(map);
+	// Census blocks
+	var censusBlocks = L.mapbox.featureLayer().loadURL("data/BernallioCensusBlocks_Joined.json").addTo(map);
+
+	// Facebook places
+	var facebookPlaces = omnivore.csv("data/FacebookPlaces_Albuquerque.csv").addTo(map);
+	console.log(facebookPlaces);
 });
