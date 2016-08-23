@@ -1,1 +1,1 @@
-# rs21-demonstration-of-capability
+# Resilient Solutions 21 - Demonstration of Capability
