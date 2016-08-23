@@ -46,7 +46,7 @@ $(document).ready(function() {
 		// Tweets
 		// var tweets = map.featureLayer.setGeoJSON(parseTweetArray(tweetArray)).addTo(map);
 
-		map.featureLayer.setGeoJSON(parseTweetArray(tweetArray)).on('ready', function(e) {
+		L.mapbox.featureLayer(parseTweetArray(tweetArray)).on('ready', function(e) {
 			// The clusterGroup gets each marker in the group added to it
 			// once loaded, and then is added to the map
 			var tweetCluster = new L.MarkerClusterGroup();
