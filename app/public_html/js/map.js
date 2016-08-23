@@ -1,4 +1,5 @@
 $(document).ready(function() {
+	// Loads a csv file
 	var loadCSV = function(csvUrl) {
 		return $.ajax({
 			url: csvUrl,
@@ -6,6 +7,7 @@ $(document).ready(function() {
 		});
 	};
 
+	// Parses the array of tweets (created from the csv file) and turns them into useful GeoJSON
 	var parseTweetArray = function(tweetArray) {
 		tweetJson = [];
 		tweetArray.forEach(function(tweet) {
@@ -31,10 +33,10 @@ $(document).ready(function() {
 		return tweetJson;
 	};
 
-	// Bernalillo: 35.0440093,-106.9530535
+	// Creates the map!
 	L.mapbox.accessToken = "pk.eyJ1Ijoic2t5bGFyaXR5IiwiYSI6ImNpczI4ZHBmbzAwMzgyeWxrZmZnMGI5ZXYifQ.1-jGFvM11OgVgYkz3WvoNw";
 	var map = L.mapbox.map("censusmap", "mapbox.streets");
-	map.setView([35.0178, -106.6291], 11);
+	map.setView([35.0178, -106.6291], 11); // (Bernalillo: 35.0440093,-106.9530535)
 
 	$.when(loadCSV("data/FacebookPlaces_Albuquerque.csv"), loadCSV("data/Twitter_141103.csv")).done(function(csv1, csv2) {
 		var facebookPlacesArray = $.csv.toArrays(csv1[0]);
@@ -48,6 +50,11 @@ $(document).ready(function() {
 
 		// Tweets
 		// var tweets = map.featureLayer.setGeoJSON(parseTweetArray(tweetArray)).addTo(map);
+
+		// tweetCluster = L.MarkerClusterGroup();
+		// tweetGeoJSON = L.geoJson(parseTweetArray(tweetArray));
+		// tweetCluster.addLayer(tweetGeoJSON);
+		// map.addLayer(tweetCluster);
 
 		var tweets = L.mapbox.featureLayer().setGeoJSON(parseTweetArray(tweetArray)).on('ready', function(e) {
 			// The clusterGroup gets each marker in the group added to it
