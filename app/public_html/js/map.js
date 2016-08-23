@@ -11,18 +11,21 @@ $(document).ready(function() {
 		tweetArray.forEach(function(tweet) {
 			// Only add the tweet if we have lat/long data
 			if (tweet[3] && tweet[2]) {
-				tweetJson.push({
-					"type": "Feature",
-					"geometry": {
-						"type": "Point",
-						"coordinates": [tweet[3], tweet[2]]
-					},
-					"properties": {
-						"title": "@" + tweet[1],
-						"description": tweet[0],
-						"marker-color": "#55acee"
-					}
-				});
+				// Only add tweets in Bernalillo County
+				if ((tweet[3] > -108 && tweet[3] < -106) && (tweet[2] > 34 && tweet[2] < 36)) {
+					tweetJson.push({
+						"type": "Feature",
+						"geometry": {
+							"type": "Point",
+							"coordinates": [tweet[3], tweet[2]]
+						},
+						"properties": {
+							"title": "@" + tweet[1],
+							"description": tweet[0],
+							"marker-color": "#55acee"
+						}
+					});
+				}
 			}
 		});
 		return tweetJson;
@@ -46,7 +49,7 @@ $(document).ready(function() {
 		// Tweets
 		// var tweets = map.featureLayer.setGeoJSON(parseTweetArray(tweetArray)).addTo(map);
 
-		L.mapbox.featureLayer(parseTweetArray(tweetArray)).on('ready', function(e) {
+		var tweets = L.mapbox.featureLayer().setGeoJSON(parseTweetArray(tweetArray)).on('ready', function(e) {
 			// The clusterGroup gets each marker in the group added to it
 			// once loaded, and then is added to the map
 			var tweetCluster = new L.MarkerClusterGroup();
