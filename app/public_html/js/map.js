@@ -27,7 +27,7 @@ $(document).ready(function() {
 				// Only add tweets that have content
 				if (tweet[0].length > 0) {
 					// Only add tweets in Bernalillo County
-					if ((tweet[3] > -108 && tweet[3] < -106) && (tweet[2] > 34 && tweet[2] < 36)) {
+					if ((tweet[3] > bounds.longMin && tweet[3] < bounds.longMax) && (tweet[2] > bounds.latMin && tweet[2] < bounds.latMax)) {
 						tweetJson.features.push({
 							"type": "Feature",
 							"geometry": {
@@ -64,7 +64,12 @@ $(document).ready(function() {
 				// TODO
 			});
 
-			return [longMin, longMax, latMin, latMax];
+			return {
+				"longMin": longMin,
+				"longMax": longMax,
+				"latMin": latMin,
+				"latMax": latMax
+			}
 		};
 
 		// Census blocks
