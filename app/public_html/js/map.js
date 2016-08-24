@@ -1,5 +1,5 @@
 $(document).ready(function() {
-	// Loads a csv file
+	// Loads a CSV file
 	var loadCSV = function(csvUrl) {
 		return $.ajax({
 			url: csvUrl,
@@ -7,8 +7,16 @@ $(document).ready(function() {
 		});
 	};
 
+	// Loads a JSON file
+	var loadJSON = function(jsonUrl) {
+		return $.ajax({
+			url: jsonUrl,
+			dataType: "json"
+		});
+	};
+
 	// Parses the array of tweets (created from the csv file) and turns them into useful GeoJSON
-	var parseTweetArray = function(tweetArray) {
+	var parseTweetArray = function(tweetArray, bounds) {
 		tweetJson = {
 			"type": "FeatureCollection",
 			"features": []
@@ -45,9 +53,19 @@ $(document).ready(function() {
 	var map = L.mapbox.map("censusmap", "mapbox.streets");
 	map.setView([35.0178, -106.6291], 11); // Bernalillo County
 
-	$.when(loadCSV("data/FacebookPlaces_Albuquerque.csv"), loadCSV("data/Twitter_141103.csv")).done(function(csv1, csv2) {
+	$.when(loadCSV("data/FacebookPlaces_Albuquerque.csv"), loadCSV("data/Twitter_141103.csv"), loadJSON("data/BernallioCensusBlocks_Joined.json")).done(function(csv1, csv2, json) {
 		var facebookPlacesArray = $.csv.toArrays(csv1[0]);
 		var tweetArray = $.csv.toArrays(csv2[0]);
+
+		var bernalilloBounds = function(json) {
+			var longMin = -106.6291, longMax = -106.6291, latMin = 35.0178, latMax = 35.0178;
+
+			json.features.forEach(function() {
+				// TODO
+			});
+
+			return [longMin, longMax, latMin, latMax];
+		};
 
 		// Census blocks
 		var censusBlocks = L.mapbox.featureLayer().loadURL("data/BernallioCensusBlocks_Joined.json").addTo(map);
@@ -57,7 +75,7 @@ $(document).ready(function() {
 
 		// Tweets
 		tweetCluster = new L.MarkerClusterGroup();
-		tweetGeoJSON = L.mapbox.featureLayer().setGeoJSON(parseTweetArray(tweetArray));
+		tweetGeoJSON = L.mapbox.featureLayer().setGeoJSON(parseTweetArray(tweetArray, bernalilloBounds(json)));
 		tweetCluster.addLayer(tweetGeoJSON);
 		map.addLayer(tweetCluster);
 	});
