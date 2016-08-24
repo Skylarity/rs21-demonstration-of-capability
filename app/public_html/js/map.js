@@ -42,7 +42,7 @@ $(document).ready(function() {
 	// Creates the map!
 	L.mapbox.accessToken = "pk.eyJ1Ijoic2t5bGFyaXR5IiwiYSI6ImNpczI4ZHBmbzAwMzgyeWxrZmZnMGI5ZXYifQ.1-jGFvM11OgVgYkz3WvoNw";
 	var map = L.mapbox.map("censusmap", "mapbox.streets");
-	map.setView([35.0178, -106.6291], 11); // (Bernalillo: 35.0440093,-106.9530535)
+	map.setView([35.0178, -106.6291], 11); // Bernalillo County
 
 	$.when(loadCSV("data/FacebookPlaces_Albuquerque.csv"), loadCSV("data/Twitter_141103.csv")).done(function(csv1, csv2) {
 		var facebookPlacesArray = $.csv.toArrays(csv1[0]);
