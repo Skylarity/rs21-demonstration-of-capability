@@ -27,12 +27,14 @@ $(document).ready(function() {
 				// Only add tweets that have content
 				if (tweet[0].length > 0) {
 					// Only add tweets in Bernalillo County
-					if ((tweet[3] > bounds.longMin && tweet[3] < bounds.longMax) && (tweet[2] > bounds.latMin && tweet[2] < bounds.latMax)) {
+					var lat = tweet[2], lng = tweet[3];
+					if ((lat > bounds.latMin && lat < bounds.latMax) && (lng > bounds.lngMin && lng < bounds.lngMax)) {
+						console.log("Lat: " + lat + ", Lng: " + lng);
 						tweetJson.features.push({
 							"type": "Feature",
 							"geometry": {
 								"type": "Point",
-								"coordinates": [tweet[3], tweet[2]]
+								"coordinates": [lng, lat]
 							},
 							"properties": {
 								"title": "@" + tweet[1],
@@ -53,34 +55,43 @@ $(document).ready(function() {
 	var map = L.mapbox.map("censusmap", "mapbox.streets");
 	map.setView([35.0178, -106.6291], 11); // Bernalillo County
 
+	// Load data and do stuff with it
 	$.when(loadCSV("data/FacebookPlaces_Albuquerque.csv"), loadCSV("data/Twitter_141103.csv"), loadJSON("data/BernallioCensusBlocks_Joined.json")).done(function(csv1, csv2, json) {
 		var facebookPlacesArray = $.csv.toArrays(csv1[0]);
 		var tweetArray = $.csv.toArrays(csv2[0]);
+		var censusJson = json[0];
 
+		// Grabs the bounds of the census blocks
 		var bernalilloBounds = function(json) {
-			var longMin = -106.6291, longMax = -106.6291, latMin = 35.0178, latMax = 35.0178;
+			var bounds = {
+				"latMin": 35.0178,
+				"latMax": 35.0178,
+				"lngMin": -106.6291,
+				"lngMax": -106.6291
+			}
 
-			json.features.forEach(function() {
-				// TODO
+			json.features.forEach(function(feature) {
+				feature.geometry.coordinates.forEach(function(coordList) {
+					coordList.forEach(function(coord) {
+						// TODO: Rewrite so that I create my own bounds
+					});
+				});
 			});
 
-			return {
-				"longMin": longMin,
-				"longMax": longMax,
-				"latMin": latMin,
-				"latMax": latMax
-			};
+			return bounds;
 		};
 
-		// Census blocks
+		console.log(bernalilloBounds(censusJson));
+
+		// Census block feature layer
 		var censusBlocks = L.mapbox.featureLayer().loadURL("data/BernallioCensusBlocks_Joined.json").addTo(map);
 
-		// Facebook places
+		// Facebook places feature layer
 		// var facebookPlaces = map.featureLayer.setGeoJSON(parseFacbookPlacesArray(facebookPlacesArray)).addTo(map);
 
-		// Tweets
+		// Tweet marker cluster
 		tweetCluster = new L.MarkerClusterGroup();
-		tweetGeoJSON = L.mapbox.featureLayer().setGeoJSON(parseTweetArray(tweetArray, bernalilloBounds(json)));
+		tweetGeoJSON = L.mapbox.featureLayer().setGeoJSON(parseTweetArray(tweetArray, bernalilloBounds(censusJson)));
 		tweetCluster.addLayer(tweetGeoJSON);
 		map.addLayer(tweetCluster);
 	});
