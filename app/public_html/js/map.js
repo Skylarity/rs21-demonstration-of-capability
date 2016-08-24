@@ -69,7 +69,7 @@ $(document).ready(function() {
 				"longMax": longMax,
 				"latMin": latMin,
 				"latMax": latMax
-			}
+			};
 		};
 
 		// Census blocks
