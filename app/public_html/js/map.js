@@ -9,13 +9,16 @@ $(document).ready(function() {
 
 	// Parses the array of tweets (created from the csv file) and turns them into useful GeoJSON
 	var parseTweetArray = function(tweetArray) {
-		tweetJson = [];
+		tweetJson = {
+			"type": "FeatureCollection",
+			"features": []
+		};
 		tweetArray.forEach(function(tweet) {
 			// Only add the tweet if we have lat/long data
 			if (tweet[3] && tweet[2]) {
 				// Only add tweets in Bernalillo County
 				if ((tweet[3] > -108 && tweet[3] < -106) && (tweet[2] > 34 && tweet[2] < 36)) {
-					tweetJson.push({
+					tweetJson.features.push({
 						"type": "Feature",
 						"geometry": {
 							"type": "Point",
