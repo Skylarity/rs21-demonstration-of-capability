@@ -16,20 +16,23 @@ $(document).ready(function() {
 		tweetArray.forEach(function(tweet) {
 			// Only add the tweet if we have lat/long data
 			if (tweet[3] && tweet[2]) {
-				// Only add tweets in Bernalillo County
-				if ((tweet[3] > -108 && tweet[3] < -106) && (tweet[2] > 34 && tweet[2] < 36)) {
-					tweetJson.features.push({
-						"type": "Feature",
-						"geometry": {
-							"type": "Point",
-							"coordinates": [tweet[3], tweet[2]]
-						},
-						"properties": {
-							"title": "@" + tweet[1],
-							"description": tweet[0],
-							"marker-color": "#55acee"
-						}
-					});
+				// Only add tweets that have content
+				if (tweet[0].length > 0) {
+					// Only add tweets in Bernalillo County
+					if ((tweet[3] > -108 && tweet[3] < -106) && (tweet[2] > 34 && tweet[2] < 36)) {
+						tweetJson.features.push({
+							"type": "Feature",
+							"geometry": {
+								"type": "Point",
+								"coordinates": [tweet[3], tweet[2]]
+							},
+							"properties": {
+								"title": "@" + tweet[1],
+								"description": tweet[0],
+								"marker-color": "#55acee"
+							}
+						});
+					}
 				}
 			}
 		});
