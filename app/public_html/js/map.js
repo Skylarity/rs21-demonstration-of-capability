@@ -28,6 +28,7 @@ $(document).ready(function() {
 							},
 							"properties": {
 								"title": "@" + tweet[1],
+								"name": "@" + tweet[1],
 								"description": tweet[0],
 								"marker-color": "#55acee"
 							}
@@ -55,21 +56,9 @@ $(document).ready(function() {
 		// var facebookPlaces = map.featureLayer.setGeoJSON(parseFacbookPlacesArray(facebookPlacesArray)).addTo(map);
 
 		// Tweets
-		// var tweets = map.featureLayer.setGeoJSON(parseTweetArray(tweetArray)).addTo(map);
-
-		// tweetCluster = L.MarkerClusterGroup();
-		// tweetGeoJSON = L.geoJson(parseTweetArray(tweetArray));
-		// tweetCluster.addLayer(tweetGeoJSON);
-		// map.addLayer(tweetCluster);
-
-		var tweets = L.mapbox.featureLayer().setGeoJSON(parseTweetArray(tweetArray)).on('ready', function(e) {
-			// The clusterGroup gets each marker in the group added to it
-			// once loaded, and then is added to the map
-			var tweetCluster = new L.MarkerClusterGroup();
-			e.target.eachLayer(function(layer) {
-				tweetCluster.addLayer(layer);
-			});
-			map.addLayer(tweetCluster);
-		});
+		tweetCluster = new L.MarkerClusterGroup();
+		tweetGeoJSON = L.mapbox.featureLayer().setGeoJSON(parseTweetArray(tweetArray));
+		tweetCluster.addLayer(tweetGeoJSON);
+		map.addLayer(tweetCluster);
 	});
 });
