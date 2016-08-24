@@ -68,7 +68,7 @@ $(document).ready(function() {
 				"latMax": 35.0178,
 				"lngMin": -106.6291,
 				"lngMax": -106.6291
-			}
+			};
 
 			json.features.forEach(function(feature) {
 				feature.geometry.coordinates.forEach(function(coordList) {
