@@ -1,105 +1,134 @@
-$(document).ready(function() {
-	// Generically loads a CSV file
-	var loadCSV = function(csvUrl) {
-		return $.ajax({
-			url: csvUrl,
-			dataType: "text"
-		});
-	};
+// Generically loads a CSV file
+function loadCSV(csvUrl) {
+	return $.ajax({
+		url: csvUrl,
+		dataType: "text"
+	});
+}
 
-	// Generically loads a JSON file
-	var loadJSON = function(jsonUrl) {
-		return $.ajax({
-			url: jsonUrl,
-			dataType: "json"
-		});
-	};
+// Generically loads a JSON file
+function loadJSON(jsonUrl) {
+	return $.ajax({
+		url: jsonUrl,
+		dataType: "json"
+	});
+}
 
-	// Parses the array of tweets and turns them into useful GeoJSON
-	var parseTweetArray = function(tweetArray, bounds) {
-		tweetJson = {
-			"type": "FeatureCollection",
-			"features": []
-		};
-		tweetArray.forEach(function(tweet) {
-			// Only add the tweet if we have lat/long data
-			if (tweet[3] && tweet[2]) {
-				// Only add tweets that have content
-				if (tweet[0].length > 0) {
-					// Only add tweets in Bernalillo County
-					var lat = tweet[2], lng = tweet[3];
-					if ((lat > bounds.latMin && lat < bounds.latMax) && (lng > bounds.lngMin && lng < bounds.lngMax)) {
-						tweetJson.features.push({
-							"type": "Feature",
-							"geometry": {
-								"type": "Point",
-								"coordinates": [lng, lat]
-							},
-							"properties": {
-								"title": "@" + tweet[1],
-								"name": "@" + tweet[1],
-								"description": tweet[0],
-								"marker-color": "#55acee",
-								"marker-symbol": 1
-							}
-						});
-					}
+// Parses the array of tweets and turns them into useful GeoJSON
+function parseTweetArray(tweetArray, bounds) {
+	tweetJson = {
+		"type": "FeatureCollection",
+		"features": []
+	};
+	tweetArray.forEach(function(tweet) {
+		// Only add the tweet if we have lat/long data
+		if (tweet[3] && tweet[2]) {
+			// Only add tweets that have content
+			if (tweet[0].length > 0) {
+				// Only add tweets in Bernalillo County
+				var lat = tweet[2], lng = tweet[3];
+				if ((lat > bounds.latMin && lat < bounds.latMax) && (lng > bounds.lngMin && lng < bounds.lngMax)) {
+					tweetJson.features.push({
+						"type": "Feature",
+						"geometry": {
+							"type": "Point",
+							"coordinates": [lng, lat]
+						},
+						"properties": {
+							"title": "@" + tweet[1],
+							"name": "@" + tweet[1],
+							"description": tweet[0],
+							"marker-color": "#55acee",
+							"marker-symbol": 1
+						}
+					});
 				}
 			}
-		});
-		return tweetJson;
+		}
+	});
+	return tweetJson;
+}
+
+// Parses the array of facebook places, grabs the data we need for each place, and turns them into useful GeoJSON
+function parseFacebookPlacesArray(facebookPlacesArray, bounds) {
+	facebookPlacesJson = {
+		"type": "FeatureCollection",
+		"features": []
 	};
+	facebookPlacesArray.forEach(function(facebookPlace) {
+		var name = facebookPlace[0];
+		var type, checkins, lat, lng;
 
-	// Parses the array of facebook places, grabs the data we need for each place, and turns them into useful GeoJSON
-	var parseFacebookPlacesArray = function(facebookPlacesArray, bounds) {
-		facebookPlacesJson = {
-			"type": "FeatureCollection",
-			"features": []
-		};
-		facebookPlacesArray.forEach(function(facebookPlace) {
-			var name = facebookPlace[0];
-			var type, checkins, lat, lng;
+		// Gross check to deal with data that's in two formats
+		if (facebookPlace[6].length > 0) {
+			type = facebookPlace[3];
+			checkins = facebookPlace[4];
+			lat = facebookPlace[5];
+			lng = facebookPlace[6];
+		} else {
+			type = facebookPlace[1];
+			checkins = facebookPlace[2];
+			lat = facebookPlace[3];
+			lng = facebookPlace[4];
+		}
 
-			// Gross check to deal with data that's in two formats
-			if (facebookPlace[6].length > 0) {
-				type = facebookPlace[3];
-				checkins = facebookPlace[4];
-				lat = facebookPlace[5];
-				lng = facebookPlace[6];
-			} else {
-				type = facebookPlace[1];
-				checkins = facebookPlace[2];
-				lat = facebookPlace[3];
-				lng = facebookPlace[4];
-			}
+		checkinVerb = checkins == 1 ? "checkin" : "checkins";
 
-			checkinVerb = checkins == 1 ? "checkin" : "checkins";
+		// Only add facebook places in Bernalillo County
+		if ((lat > bounds.latMin && lat < bounds.latMax) && (lng > bounds.lngMin && lng < bounds.lngMax)) {
+			facebookPlacesJson.features.push({
+				"type": "Feature",
+				"geometry": {
+					"type": "Point",
+					"coordinates": [lng, lat]
+				},
+				"properties": {
+					"title": name,
+					"name": name,
+					"description": type + " <small>(" + checkins + " " + checkinVerb + ")</small>",
+					"marker-color": "#3b5998",
+					"marker-symbol": 1
+				}
+			});
+		}
+	});
+	return facebookPlacesJson;
+}
 
-			// Only add facebook places in Bernalillo County
-			if ((lat > bounds.latMin && lat < bounds.latMax) && (lng > bounds.lngMin && lng < bounds.lngMax)) {
-				facebookPlacesJson.features.push({
-					"type": "Feature",
-					"geometry": {
-						"type": "Point",
-						"coordinates": [lng, lat]
-					},
-					"properties": {
-						"title": name,
-						"name": name,
-						"description": type + "<small>, with " + checkins + " " + checkinVerb + "</small>",
-						"marker-color": "#3b5998",
-						"marker-symbol": 1
-					}
-				});
-			}
-		});
-		return facebookPlacesJson;
-	};
+// Initialized here so that it's accessible in showMarkers()
+var layers;
+var overlays;
 
+function showMarkers() {
+	// Grab all controls
+	var filters = document.getElementById("marker-form").filters;
+
+	// Create a list of currently enabled markers
+	var markerList = [];
+	for (var i = 0; i < filters.length; i++) {
+		if (filters[i].checked) markerList.push(filters[i].value);
+	}
+
+	// Clear any current markers
+	overlays.clearLayers();
+
+	// Create a new marker group
+	var clusterGroup = new L.MarkerClusterGroup().addTo(overlays);
+	// Add any markers that fit the filtered criteria to that group
+	layers.eachLayer(function(layer) {
+		if (list.indexOf(layer.feature.properties.line) !== -1) {
+			clusterGroup.addLayer(layer);
+		}
+	});
+}
+
+$(document).ready(function() {
 	// Creates the map!
 	L.mapbox.accessToken = "pk.eyJ1Ijoic2t5bGFyaXR5IiwiYSI6ImNpczI4ZHBmbzAwMzgyeWxrZmZnMGI5ZXYifQ.1-jGFvM11OgVgYkz3WvoNw";
 	var map = L.mapbox.map("censusmap", "mapbox.streets");
 	map.setView([35.0178, -106.6291], 11); // Bernalillo County
+
+	overlays = L.layerGroup().addTo(map);
 
 	// Load data and do stuff with it
 	$.when(loadCSV("data/FacebookPlaces_Albuquerque.csv"), loadCSV("data/Twitter_141103.csv"), loadJSON("data/BernallioCensusBlocks_Joined.json")).done(function(csv1, csv2, json) {
@@ -148,7 +177,9 @@ $(document).ready(function() {
 				});
 			}
 		});
-		facebookPlacesGeoJSON = L.mapbox.featureLayer().setGeoJSON(parseFacebookPlacesArray(facebookPlacesArray, bernalilloBounds(censusJson)));
+		facebookPlacesGeoJSON = L.mapbox.featureLayer().setGeoJSON(parseFacebookPlacesArray(facebookPlacesArray, bernalilloBounds(censusJson))).on("ready", function(e) {
+			layers = e.target;
+		});
 		facebookPlacesCluster.addLayer(facebookPlacesGeoJSON);
 		map.addLayer(facebookPlacesCluster);
 
@@ -161,7 +192,12 @@ $(document).ready(function() {
 				});
 			}
 		});
-		tweetGeoJSON = L.mapbox.featureLayer().setGeoJSON(parseTweetArray(tweetArray, bernalilloBounds(censusJson)));
+		tweetGeoJSON = L.mapbox.featureLayer().setGeoJSON(parseTweetArray(tweetArray, bernalilloBounds(censusJson))).on("ready", function(e) {
+			console.log(e);
+			layers = e.target;
+			console.log(layers);
+			showMarkers();
+		});
 		tweetCluster.addLayer(tweetGeoJSON);
 		map.addLayer(tweetCluster);
 	});
