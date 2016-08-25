@@ -101,6 +101,7 @@ function parseCensusJson(censusJson) {
 		var fillOpacity = 0;
 		feature.properties.fill = "rgba(90, 90, 255, " + fillOpacity + ")";
 		feature.properties.stroke = "rgb(90, 90, 255)";
+		feature.properties.title = "Average income: <span class=\"text-success\">$" + feature.properties.ACS_13_5YR_B19051_with_ann_HD01_VD01 + "</span> per month";
 	});
 
 	return censusJson;
