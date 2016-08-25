@@ -95,6 +95,17 @@ function parseFacebookPlacesArray(facebookPlacesArray, bounds) {
 	return facebookPlacesJson;
 }
 
+function parseCensusJson(censusJson) {
+	censusJson.features.forEach(function(feature) {
+		// fill (color), fill-opacity (0-1), stroke (color), stroke-opacity (0-1), stroke-width (px), title (string)
+		var fillOpacity = 0;
+		feature.properties.fill = "rgba(90, 90, 255, " + fillOpacity + ")";
+		feature.properties.stroke = "rgb(90, 90, 255)";
+	});
+
+	return censusJson;
+}
+
 // Initialized here so that it's accessible in showMarkers()
 var layers;
 var overlays;
@@ -134,7 +145,7 @@ $(document).ready(function() {
 	$.when(loadCSV("data/FacebookPlaces_Albuquerque.csv"), loadCSV("data/Twitter_141103.csv"), loadJSON("data/BernallioCensusBlocks_Joined.json")).done(function(csv1, csv2, json) {
 		var facebookPlacesArray = $.csv.toArrays(csv1[0]);
 		var tweetArray = $.csv.toArrays(csv2[0]);
-		var censusJson = json[0];
+		var censusJson = parseCensusJson(json[0]);
 
 		// Grabs the bounds of the census blocks
 		var bernalilloBounds = function(json) {
@@ -166,7 +177,7 @@ $(document).ready(function() {
 		};
 
 		// Census block feature layer
-		var censusBlocks = L.mapbox.featureLayer().loadURL("data/BernallioCensusBlocks_Joined.json").addTo(map);
+		var censusBlocks = L.mapbox.featureLayer().setGeoJSON(censusJson).addTo(map);
 
 		// Facebook Places marker cluster
 		facebookPlacesCluster = new L.MarkerClusterGroup({
@@ -193,9 +204,7 @@ $(document).ready(function() {
 			}
 		});
 		tweetGeoJSON = L.mapbox.featureLayer().setGeoJSON(parseTweetArray(tweetArray, bernalilloBounds(censusJson))).on("ready", function(e) {
-			console.log(e);
 			layers = e.target;
-			console.log(layers);
 			showMarkers();
 		});
 		tweetCluster.addLayer(tweetGeoJSON);
