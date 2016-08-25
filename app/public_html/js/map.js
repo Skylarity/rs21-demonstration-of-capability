@@ -1,5 +1,5 @@
 $(document).ready(function() {
-	// Loads a CSV file
+	// Generically loads a CSV file
 	var loadCSV = function(csvUrl) {
 		return $.ajax({
 			url: csvUrl,
@@ -7,7 +7,7 @@ $(document).ready(function() {
 		});
 	};
 
-	// Loads a JSON file
+	// Generically loads a JSON file
 	var loadJSON = function(jsonUrl) {
 		return $.ajax({
 			url: jsonUrl,
@@ -15,7 +15,7 @@ $(document).ready(function() {
 		});
 	};
 
-	// Parses the array of tweets (created from the csv file) and turns them into useful GeoJSON
+	// Parses the array of tweets and turns them into useful GeoJSON
 	var parseTweetArray = function(tweetArray, bounds) {
 		tweetJson = {
 			"type": "FeatureCollection",
@@ -48,6 +48,52 @@ $(document).ready(function() {
 			}
 		});
 		return tweetJson;
+	};
+
+	// Parses the array of facebook places, grabs the data we need for each place, and turns them into useful GeoJSON
+	var parseFacebookPlacesArray = function(facebookPlacesArray, bounds) {
+		facebookPlacesJson = {
+			"type": "FeatureCollection",
+			"features": []
+		};
+		facebookPlacesArray.forEach(function(facebookPlace) {
+			var name = facebookPlace[0];
+			var type, checkins, lat, lng;
+
+			// Gross check to deal with data that's in two formats
+			if (facebookPlace[6].length > 0) {
+				type = facebookPlace[3];
+				checkins = facebookPlace[4];
+				lat = facebookPlace[5];
+				lng = facebookPlace[6];
+			} else {
+				type = facebookPlace[1];
+				checkins = facebookPlace[2];
+				lat = facebookPlace[3];
+				lng = facebookPlace[4];
+			}
+
+			checkinVerb = checkins == 1 ? "checkin" : "checkins";
+
+			// Only add facebook places in Bernalillo County
+			if ((lat > bounds.latMin && lat < bounds.latMax) && (lng > bounds.lngMin && lng < bounds.lngMax)) {
+				facebookPlacesJson.features.push({
+					"type": "Feature",
+					"geometry": {
+						"type": "Point",
+						"coordinates": [lng, lat]
+					},
+					"properties": {
+						"title": name,
+						"name": name,
+						"description": type + "<small>, with " + checkins + " " + checkinVerb + "</small>",
+						"marker-color": "#3b5998",
+						"marker-symbol": 1
+					}
+				});
+			}
+		});
+		return facebookPlacesJson;
 	};
 
 	// Creates the map!
@@ -92,6 +138,19 @@ $(document).ready(function() {
 
 		// Census block feature layer
 		var censusBlocks = L.mapbox.featureLayer().loadURL("data/BernallioCensusBlocks_Joined.json").addTo(map);
+
+		// Facebook Places marker cluster
+		facebookPlacesCluster = new L.MarkerClusterGroup({
+			iconCreateFunction: function(cluster) {
+				return new L.DivIcon({
+					iconSize: [50, 50],
+					html: "<div class=\"facebook-marker\">" + cluster.getChildCount() + "</div>"
+				});
+			}
+		});
+		facebookPlacesGeoJSON = L.mapbox.featureLayer().setGeoJSON(parseFacebookPlacesArray(facebookPlacesArray, bernalilloBounds(censusJson)));
+		facebookPlacesCluster.addLayer(facebookPlacesGeoJSON);
+		map.addLayer(facebookPlacesCluster);
 
 		// Tweet marker cluster
 		tweetCluster = new L.MarkerClusterGroup({
