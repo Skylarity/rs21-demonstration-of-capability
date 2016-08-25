@@ -29,7 +29,6 @@ $(document).ready(function() {
 					// Only add tweets in Bernalillo County
 					var lat = tweet[2], lng = tweet[3];
 					if ((lat > bounds.latMin && lat < bounds.latMax) && (lng > bounds.lngMin && lng < bounds.lngMax)) {
-						console.log("Lat: " + lat + ", Lng: " + lng);
 						tweetJson.features.push({
 							"type": "Feature",
 							"geometry": {
@@ -40,7 +39,8 @@ $(document).ready(function() {
 								"title": "@" + tweet[1],
 								"name": "@" + tweet[1],
 								"description": tweet[0],
-								"marker-color": "#55acee"
+								"marker-color": "#55acee",
+								"marker-symbol": 1
 							}
 						});
 					}
@@ -73,7 +73,16 @@ $(document).ready(function() {
 			json.features.forEach(function(feature) {
 				feature.geometry.coordinates.forEach(function(coordList) {
 					coordList.forEach(function(coord) {
-						// TODO: Rewrite so that I create my own bounds
+						if (coord[1] > bounds.latMax) {
+							bounds.latMax = coord[1];
+						} else if (coord[1] < bounds.latMin) {
+							bounds.latMin = coord[1];
+						}
+						if (coord[0] > bounds.lngMax) {
+							bounds.lngMax = coord[0];
+						} else if (coord[0] < bounds.lngMin) {
+							bounds.lngMin = coord[0];
+						}
 					});
 				});
 			});
@@ -81,16 +90,18 @@ $(document).ready(function() {
 			return bounds;
 		};
 
-		console.log(bernalilloBounds(censusJson));
-
 		// Census block feature layer
 		var censusBlocks = L.mapbox.featureLayer().loadURL("data/BernallioCensusBlocks_Joined.json").addTo(map);
 
-		// Facebook places feature layer
-		// var facebookPlaces = map.featureLayer.setGeoJSON(parseFacbookPlacesArray(facebookPlacesArray)).addTo(map);
-
 		// Tweet marker cluster
-		tweetCluster = new L.MarkerClusterGroup();
+		tweetCluster = new L.MarkerClusterGroup({
+			iconCreateFunction: function(cluster) {
+				return new L.DivIcon({
+					iconSize: [50, 50],
+					html: "<div class=\"twitter-marker\">" + cluster.getChildCount() + "</div>"
+				});
+			}
+		});
 		tweetGeoJSON = L.mapbox.featureLayer().setGeoJSON(parseTweetArray(tweetArray, bernalilloBounds(censusJson)));
 		tweetCluster.addLayer(tweetGeoJSON);
 		map.addLayer(tweetCluster);
