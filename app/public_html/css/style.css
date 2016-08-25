@@ -7,30 +7,20 @@
 	border: none;
 }
 
+.cluster-marker {
+	border-radius: 100px;
+	text-align: center;
+	font-size: 1.3em;
+}
+
 .twitter-marker {
-	width: 50px;
-	height: 50px;
-	padding: 5px;
 	color: #fff;
 	background-color: #55acee;
 	border: 3px solid #a9d5f6;
-	border-radius: 50%;
-	line-height: 30px; /* Super hacky way to align one line of text vertically */
-	text-align: center;
-	font-size: 1.3em;
-	font-weight: bold;
 }
 
 .facebook-marker {
-	width: 50px;
-	height: 50px;
-	padding: 5px;
 	color: #fff;
 	background-color: #3b5998;
 	border: 3px solid #9cabcb;
-	border-radius: 50%;
-	line-height: 30px; /* Super hacky way to align one line of text vertically */
-	text-align: center;
-	font-size: 1.3em;
-	font-weight: bold;
 }

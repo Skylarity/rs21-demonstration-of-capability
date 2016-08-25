@@ -143,8 +143,8 @@ $(document).ready(function() {
 		facebookPlacesCluster = new L.MarkerClusterGroup({
 			iconCreateFunction: function(cluster) {
 				return new L.DivIcon({
-					iconSize: [50, 50],
-					html: "<div class=\"facebook-marker\">" + cluster.getChildCount() + "</div>"
+					iconSize: [80, 30],
+					html: "<div class=\"cluster-marker facebook-marker\"><i class=\"fa fa-sm fa-facebook\"></i> " + cluster.getChildCount() + "</div>"
 				});
 			}
 		});
@@ -156,8 +156,8 @@ $(document).ready(function() {
 		tweetCluster = new L.MarkerClusterGroup({
 			iconCreateFunction: function(cluster) {
 				return new L.DivIcon({
-					iconSize: [50, 50],
-					html: "<div class=\"twitter-marker\">" + cluster.getChildCount() + "</div>"
+					iconSize: [80, 30],
+					html: "<div class=\"cluster-marker twitter-marker\"><i class=\"fa fa-sm fa-twitter\"></i> " + cluster.getChildCount() + "</div>"
 				});
 			}
 		});
