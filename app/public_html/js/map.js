@@ -55,6 +55,7 @@ function parseFacebookPlacesArray(facebookPlacesArray, bounds) {
 		"type": "FeatureCollection",
 		"features": []
 	};
+	var seen = [];
 	facebookPlacesArray.forEach(function(facebookPlace) {
 		var name = facebookPlace[0];
 		var type, checkins, lat, lng;
@@ -74,22 +75,31 @@ function parseFacebookPlacesArray(facebookPlacesArray, bounds) {
 
 		checkinVerb = checkins == 1 ? "checkin" : "checkins";
 
-		// Only add facebook places in Bernalillo County
-		if ((lat > bounds.latMin && lat < bounds.latMax) && (lng > bounds.lngMin && lng < bounds.lngMax)) {
-			facebookPlacesJson.features.push({
-				"type": "Feature",
-				"geometry": {
-					"type": "Point",
-					"coordinates": [lng, lat]
-				},
-				"properties": {
-					"title": name,
-					"name": name,
-					"description": type + " <small>(" + checkins + " " + checkinVerb + ")</small>",
-					"marker-color": "#3b5998",
-					"marker-symbol": 1
+		// Only add "Food/grocery" places
+		if (type === "Food/grocery") {
+			// Don't add duplicates
+			seen.push(name);
+			console.log(name);
+			console.log($.inArray(name, seen) !== -1);
+			if ($.inArray(name, seen) !== -1) {
+				// Only add facebook places in Bernalillo County
+				if ((lat > bounds.latMin && lat < bounds.latMax) && (lng > bounds.lngMin && lng < bounds.lngMax)) {
+					facebookPlacesJson.features.push({
+						"type": "Feature",
+						"geometry": {
+							"type": "Point",
+							"coordinates": [lng, lat]
+						},
+						"properties": {
+							"title": name,
+							"name": name,
+							"description": type + " <small>(" + checkins + " " + checkinVerb + ")</small>",
+							"marker-color": "#3b5998",
+							"marker-symbol": 1
+						}
+					});
 				}
-			});
+			}
 		}
 	});
 	return facebookPlacesJson;
@@ -201,19 +211,19 @@ $(document).ready(function() {
 		map.addLayer(facebookPlacesCluster);
 
 		// Tweet marker cluster
-		tweetCluster = new L.MarkerClusterGroup({
-			iconCreateFunction: function(cluster) {
-				return new L.DivIcon({
-					iconSize: [80, 30],
-					html: "<div class=\"cluster-marker twitter-marker\"><i class=\"fa fa-sm fa-twitter\"></i> " + cluster.getChildCount() + "</div>"
-				});
-			}
-		});
-		tweetGeoJSON = L.mapbox.featureLayer().setGeoJSON(parseTweetArray(tweetArray, bernalilloBounds(censusJson))).on("ready", function(e) {
-			layers = e.target;
-			showMarkers();
-		});
-		tweetCluster.addLayer(tweetGeoJSON);
-		map.addLayer(tweetCluster);
+		// tweetCluster = new L.MarkerClusterGroup({
+		// 	iconCreateFunction: function(cluster) {
+		// 		return new L.DivIcon({
+		// 			iconSize: [80, 30],
+		// 			html: "<div class=\"cluster-marker twitter-marker\"><i class=\"fa fa-sm fa-twitter\"></i> " + cluster.getChildCount() + "</div>"
+		// 		});
+		// 	}
+		// });
+		// tweetGeoJSON = L.mapbox.featureLayer().setGeoJSON(parseTweetArray(tweetArray, bernalilloBounds(censusJson))).on("ready", function(e) {
+		// 	layers = e.target;
+		// 	showMarkers();
+		// });
+		// tweetCluster.addLayer(tweetGeoJSON);
+		// map.addLayer(tweetCluster);
 	});
 });
