@@ -115,7 +115,7 @@ function parseCensusJson(censusJson) {
 		// fill (color), fill-opacity (0-1), stroke (color), stroke-opacity (0-1), stroke-width (px), title (string)
 		var fillOpacity = scale(feature.properties.ACS_13_5YR_B19051_with_ann_HD01_VD01);
 		feature.properties.fill = "rgba(90, 200, 90, " + fillOpacity + ")";
-		feature.properties.stroke = "rgb(90, 200, 90)";
+		feature.properties.stroke = "rgb(90, 150, 90)";
 		feature.properties.title = "Average income: <span class=\"text-success\">$" + feature.properties.ACS_13_5YR_B19051_with_ann_HD01_VD01 + "</span> per month";
 	});
 
