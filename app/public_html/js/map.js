@@ -76,12 +76,14 @@ function parseFacebookPlacesArray(facebookPlacesArray, bounds) {
 		checkinVerb = checkins == 1 ? "checkin" : "checkins";
 
 		// Only add "Food/grocery" places
-		if (type === "Food/grocery") {
+		validTypes = ["Food/grocery", "Farming/agriculture"];
+		if ($.inArray(type, validTypes) > -1) {
 			// Don't add duplicates
-			seen.push(name);
-			console.log(name);
-			console.log($.inArray(name, seen) !== -1);
-			if ($.inArray(name, seen) !== -1) {
+			needle = name;
+			// console.log(needle);
+			// console.log(seen);
+			// console.log($.inArray(needle, seen) > -1);
+			if ($.inArray(needle, seen) === -1) {
 				// Only add facebook places in Bernalillo County
 				if ((lat > bounds.latMin && lat < bounds.latMax) && (lng > bounds.lngMin && lng < bounds.lngMax)) {
 					facebookPlacesJson.features.push({
@@ -99,6 +101,8 @@ function parseFacebookPlacesArray(facebookPlacesArray, bounds) {
 						}
 					});
 				}
+
+				seen.push(needle);
 			}
 		}
 	});
