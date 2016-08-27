@@ -184,7 +184,6 @@ function parseCensusJson(censusJson) {
 			avgIncomes.push(Number(feature.properties[housesWithIncome]) / Number(feature.properties[totalHouses]));
 		}
 	});
-	console.log(d3.min(avgIncomes));
 	var scale = d3.scaleLinear().domain([d3.min(avgIncomes), d3.max(avgIncomes)]).range([0, 1]);
 
 	censusJson.features.forEach(function(feature) {
