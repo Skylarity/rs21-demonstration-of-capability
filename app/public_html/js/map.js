@@ -14,27 +14,6 @@ function loadJSON(jsonUrl) {
 	});
 }
 
-// Point in polygon (@see https://github.com/substack/point-in-polygon)
-function pip(point, vs) {
-	// ray-casting algorithm based on
-	// http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
-
-	var x = point[0], y = point[1];
-
-	var inside = false;
-	for (var i = 0, j = vs.length - 1; i < vs.length; j = i++) {
-		var xi = vs[i][0], yi = vs[i][1];
-		var xj = vs[j][0], yj = vs[j][1];
-
-		var intersect = ((yi > y) != (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
-			if (intersect) {
-				inside = !inside;
-			}
-	}
-
-	return inside;
-}
-
 // Parses the array of tweets and turns them into useful GeoJSON
 function parseTweetArray(tweetArray, bounds) {
 	tweetJson = {
@@ -72,11 +51,13 @@ function parseTweetArray(tweetArray, bounds) {
 
 // Parses the array of facebook places, grabs the data we need for each place, and turns them into useful GeoJSON
 function parseFacebookPlacesArray(facebookPlacesArray, bounds) {
-	facebookPlacesJson = {
+	var facebookPlacesJson = {
 		"type": "FeatureCollection",
 		"features": []
 	};
+
 	var seen = [];
+
 	facebookPlacesArray.forEach(function(facebookPlace) {
 		var name = facebookPlace[0];
 		var type, checkins, lat, lng;
@@ -134,7 +115,7 @@ function parseCensusJson(censusJson) {
 	censusJson.features.forEach(function(feature) {
 		avgIncomes.push(feature.properties.ACS_13_5YR_B19051_with_ann_HD01_VD01);
 	});
-	var scale = d3.scaleLinear().domain([d3.min(avgIncomes), d3.max(avgIncomes)]).range([0.2, 1]);
+	var scale = d3.scaleLinear().domain([d3.min(avgIncomes), d3.max(avgIncomes)]).range([0, 1]);
 
 	censusJson.features.forEach(function(feature) {
 		// Prepare base fill and stroke
@@ -209,5 +190,10 @@ $(document).ready(function() {
 		facebookPlacesGeoJSON = L.mapbox.featureLayer().setGeoJSON(parseFacebookPlacesArray(facebookPlacesArray, bernalilloBounds(censusJson[0])));
 		facebookPlacesCluster.addLayer(facebookPlacesGeoJSON);
 		map.addLayer(facebookPlacesCluster);
+
+		// Food desert buffer layer
+		facebookPlacesGeoJSON._geojson.features.forEach(function(feature) {
+			new L.circle(feature.geometry.coordinates, 200, {"fill": "rgb(90, 200, 90)", "stroke": false}).addTo(map);
+		});
 	});
 });
