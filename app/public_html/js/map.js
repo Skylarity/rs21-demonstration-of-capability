@@ -14,6 +14,27 @@ function loadJSON(jsonUrl) {
 	});
 }
 
+// Point in polygon (@see https://github.com/substack/point-in-polygon)
+function pip(point, vs) {
+	// ray-casting algorithm based on
+	// http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
+
+	var x = point[0], y = point[1];
+
+	var inside = false;
+	for (var i = 0, j = vs.length - 1; i < vs.length; j = i++) {
+		var xi = vs[i][0], yi = vs[i][1];
+		var xj = vs[j][0], yj = vs[j][1];
+
+		var intersect = ((yi > y) != (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+			if (intersect) {
+				inside = !inside;
+			}
+	}
+
+	return inside;
+}
+
 // Parses the array of tweets and turns them into useful GeoJSON
 function parseTweetArray(tweetArray, bounds) {
 	tweetJson = {
@@ -106,17 +127,41 @@ function parseFacebookPlacesArray(facebookPlacesArray, bounds) {
 	return facebookPlacesJson;
 }
 
-function parseCensusJson(censusJson) {
+// Parses the census block JSON in order to set the style and perform calculations on the actual census data
+function parseCensusJson(censusJson, facebookPlacesArray) {
+	var facebookPlacesJson = parseFacebookPlacesArray(facebookPlacesArray, {"latMin": -90, "latMax": 90, "lngMin": -180, "lngMax": 180});
+
+	// Scale the average incomes down between 0.0 and 1.0
 	var avgIncomes = [];
 	censusJson.features.forEach(function(feature) {
 		avgIncomes.push(feature.properties.ACS_13_5YR_B19051_with_ann_HD01_VD01);
 	});
 	var scale = d3.scaleLinear().domain([d3.min(avgIncomes), d3.max(avgIncomes)]).range([0.2, 1]);
+
 	censusJson.features.forEach(function(feature) {
+		// Prepare base fill and stroke
 		// fill (color), fill-opacity (0-1), stroke (color), stroke-opacity (0-1), stroke-width (px), title (string)
 		var fillOpacity = scale(feature.properties.ACS_13_5YR_B19051_with_ann_HD01_VD01);
-		feature.properties.fill = "rgba(90, 200, 90, " + fillOpacity + ")";
-		feature.properties.stroke = "rgb(90, 150, 90)";
+		var stroke = "rgb(90, 150, 90)", fill = "rgba(90, 200, 90, " + fillOpacity + ")", strokeWidth = "2";
+
+		// If the census block doesn't contain a grocery store or farm, then we'll consider it a food desert
+		var foodDesert = true;
+		console.log(feature.geometry.coordinates);
+		facebookPlacesJson.features.forEach(function(fbFeature) {
+			if (pip(fbFeature.geometry.coordinates, feature.geometry.coordinates[0])) {
+				foodDesert = false;
+			}
+		});
+		if (foodDesert) {
+			stroke = "rgb(150, 90, 90)";
+			fill = "rgba(255, 90, 90, " + fillOpacity + ")";
+			strokeWidth = "3";
+		}
+
+		// Actually add the calculated fill and stroke to the block
+		feature.properties.fill = fill;
+		feature.properties.stroke = stroke;
+		feature.properties["stroke-width"] = strokeWidth; // Array key notation here because of the "-"
 		feature.properties.title = "Average income: <span class=\"text-success\">$" + feature.properties.ACS_13_5YR_B19051_with_ann_HD01_VD01 + "</span> per month";
 	});
 
@@ -162,7 +207,7 @@ $(document).ready(function() {
 	$.when(loadCSV("data/FacebookPlaces_Albuquerque.csv"), loadCSV("data/Twitter_141103.csv"), loadJSON("data/BernallioCensusBlocks_Joined.json")).done(function(csv1, csv2, json) {
 		var facebookPlacesArray = $.csv.toArrays(csv1[0]);
 		var tweetArray = $.csv.toArrays(csv2[0]);
-		var censusJson = parseCensusJson(json[0]);
+		var censusJson = parseCensusJson(json[0], facebookPlacesArray);
 
 		// Grabs the bounds of the census blocks
 		var bernalilloBounds = function(json) {
