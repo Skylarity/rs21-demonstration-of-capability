@@ -80,9 +80,6 @@ function parseFacebookPlacesArray(facebookPlacesArray, bounds) {
 		if ($.inArray(type, validTypes) > -1) {
 			// Don't add duplicates
 			needle = name;
-			// console.log(needle);
-			// console.log(seen);
-			// console.log($.inArray(needle, seen) > -1);
 			if ($.inArray(needle, seen) === -1) {
 				// Only add facebook places in Bernalillo County
 				if ((lat > bounds.latMin && lat < bounds.latMax) && (lng > bounds.lngMin && lng < bounds.lngMax)) {
