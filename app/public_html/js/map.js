@@ -165,7 +165,7 @@ function parseCensusJson(censusJson, facebookPlacesArray) {
 		feature.properties.title = "Average income: <span class=\"text-success\">$" + feature.properties.ACS_13_5YR_B19051_with_ann_HD01_VD01 + "</span> per month";
 	});
 
-	return censusJson;
+	return [censusJson, d3.min(avgIncomes), d3.max(avgIncomes)];
 }
 
 // Initialized here so that it's accessible in showMarkers()
@@ -199,7 +199,7 @@ $(document).ready(function() {
 	// Creates the map!
 	L.mapbox.accessToken = "pk.eyJ1Ijoic2t5bGFyaXR5IiwiYSI6ImNpczI4ZHBmbzAwMzgyeWxrZmZnMGI5ZXYifQ.1-jGFvM11OgVgYkz3WvoNw";
 	var map = L.mapbox.map("censusmap", "mapbox.streets");
-	map.setView([35.1, -106.6056], 12); // Bernalillo County: [35.0178, -106.6291], Albuquerque: [35.0853, -106.6056]
+	map.setView([35.13, -106.6056], 12); // Bernalillo County: [35.0178, -106.6291], Albuquerque: [35.0853, -106.6056]
 
 	overlays = L.layerGroup().addTo(map);
 
@@ -239,7 +239,7 @@ $(document).ready(function() {
 		};
 
 		// Census block feature layer
-		var censusBlocks = L.mapbox.featureLayer().setGeoJSON(censusJson).addTo(map);
+		var censusBlocks = L.mapbox.featureLayer().setGeoJSON(censusJson[0]).addTo(map);
 
 		// Facebook Places marker cluster
 		facebookPlacesCluster = new L.MarkerClusterGroup({
@@ -250,7 +250,7 @@ $(document).ready(function() {
 				});
 			}
 		});
-		facebookPlacesGeoJSON = L.mapbox.featureLayer().setGeoJSON(parseFacebookPlacesArray(facebookPlacesArray, bernalilloBounds(censusJson))).on("ready", function(e) {
+		facebookPlacesGeoJSON = L.mapbox.featureLayer().setGeoJSON(parseFacebookPlacesArray(facebookPlacesArray, bernalilloBounds(censusJson[0]))).on("ready", function(e) {
 			layers = e.target;
 		});
 		facebookPlacesCluster.addLayer(facebookPlacesGeoJSON);
@@ -265,7 +265,7 @@ $(document).ready(function() {
 		// 		});
 		// 	}
 		// });
-		// tweetGeoJSON = L.mapbox.featureLayer().setGeoJSON(parseTweetArray(tweetArray, bernalilloBounds(censusJson))).on("ready", function(e) {
+		// tweetGeoJSON = L.mapbox.featureLayer().setGeoJSON(parseTweetArray(tweetArray, bernalilloBounds(censusJson[0]))).on("ready", function(e) {
 		// 	layers = e.target;
 		// 	showMarkers();
 		// });
