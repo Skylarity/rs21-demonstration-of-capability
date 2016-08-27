@@ -192,8 +192,20 @@ $(document).ready(function() {
 		map.addLayer(facebookPlacesCluster);
 
 		// Food desert buffer layer
+		seen = [];
 		facebookPlacesGeoJSON._geojson.features.forEach(function(feature) {
-			new L.circle(feature.geometry.coordinates, 200, {"fill": "rgb(90, 200, 90)", "stroke": false}).addTo(map);
+			var latLng = [feature.geometry.coordinates[1], feature.geometry.coordinates[0]]; // Have to reverse the coordinates
+			var mileInMeters = 1609.34;
+			var options = {
+				"fillColor": "rgb(90, 200, 90)",
+				"fillOpacity": 0.5,
+				"stroke": false,
+				"clickable": false
+			};
+			if ($.inArray(latLng, seen) === -1) {
+				L.circle(latLng, mileInMeters, options).addTo(map);
+			}
+			seen.push(latLng);
 		});
 	});
 });
