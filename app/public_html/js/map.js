@@ -154,7 +154,7 @@ $(document).ready(function() {
 	// Creates the map!
 	L.mapbox.accessToken = "pk.eyJ1Ijoic2t5bGFyaXR5IiwiYSI6ImNpczI4ZHBmbzAwMzgyeWxrZmZnMGI5ZXYifQ.1-jGFvM11OgVgYkz3WvoNw";
 	var map = L.mapbox.map("censusmap", "mapbox.streets");
-	map.setView([35.0178, -106.6291], 11); // Bernalillo County
+	map.setView([35.1, -106.6056], 12); // Bernalillo County: [35.0178, -106.6291], Albuquerque: [35.0853, -106.6056]
 
 	overlays = L.layerGroup().addTo(map);
 
