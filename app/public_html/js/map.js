@@ -36,11 +36,10 @@ function pip(point, vs) {
 }
 
 // Draws the map key in D3
-function drawKey(minMax) {
-	minMax = minMax[0];
+function drawKey() {
 
 	// Key width/height in pixels
-	var width = 150, height = 350;
+	var width = 225, height = 350;
 
 	// Grab key element
 	var key = d3.select("#key");
@@ -60,11 +59,11 @@ function drawKey(minMax) {
 	// Define gradient colors
 	incomeGradient.append("svg:stop")
 		.attr("offset", "0%")
-		.attr("stop-color", "rgb(200, 90, 90)")
+		.attr("stop-color", "rgb(90, 90, 200)")
 		.attr("stop-opacity", 1);
 	incomeGradient.append("svg:stop")
 		.attr("offset", "100%")
-		.attr("stop-color", "rgb(200, 90, 90)")
+		.attr("stop-color", "rgb(90, 90, 200)")
 		.attr("stop-opacity", 0);
 
 	// Define income bar
@@ -76,42 +75,42 @@ function drawKey(minMax) {
 		.style("fill", "url(#incomeGradient)");
 
 	// Define income bar labels
-	var textMin = "$" + minMax[0] + " biweekly", textMax = "$" + minMax[1] + " biweekly";
+	var incomeOffset = 5;
+	var textMin = "0% of houses have income", textMax = "100% of houses have income";
 	var incomeTextMax = svg.append("text")
-		.attr("x", ((width / 10) + 10))
+		.attr("x", ((width / 10) + incomeOffset))
 		.attr("y", 15)
 		.text(textMax);
 	var incomeTextMin = svg.append("text")
-		.attr("x", ((width / 10) + 10))
+		.attr("x", ((width / 10) + incomeOffset))
 		.attr("y", ((height / 2) - 5))
 		.text(textMin);
 
 	// Define circle representing access to healthy food
 	var radius = height / 7;
-	var offset = 10;
+	var fdOffset = 10;
 	var foodDesertCircle = svg.append("circle")
 		.attr("cx", (width / 2))
-		.attr("cy", (height / 2) + radius + offset)
+		.attr("cy", (height / 2) + radius + fdOffset)
 		.attr("r", radius)
-		.style("fill", "rgba(90, 200, 90, 0.5)");
+		.style("fill", "rgb(90, 200, 90)");
 
 	// Define food desert label
-	var foodDesertTextContent = "Green circles represent access to healthy food.";
 	var foodDesertText = svg.append("text")
 		.attr("x", 0)
-		.attr("y", (height / 2) + (radius * 2) + (offset * 3))
+		.attr("y", (height / 2) + (radius * 2) + (fdOffset * 3))
 		.attr("text-anchor", "middle");
 	foodDesertText.append("tspan")
 		.attr("dx", width / 2) // Annoying text centering method
-		.text("Green circles ");
+		.text("Green circles represent ");
 	foodDesertText.append("tspan")
 		.attr("x", width / 2)
 		.attr("dy", "1.2em")
-		.text("represent access ");
+		.text("access to healthy food ");
 	foodDesertText.append("tspan")
 		.attr("x", width / 2)
 		.attr("dy", "1.2em")
-		.text("to healthy food.");
+		.text("within 1 mile.");
 }
 
 // Parses the array of tweets and turns them into useful GeoJSON
@@ -210,24 +209,33 @@ function parseFacebookPlacesArray(facebookPlacesArray, bounds) {
 
 // Parses the census block JSON in order to set the style and perform calculations on the actual census data
 function parseCensusJson(censusJson) {
-	// Scale the average incomes down between 0.0 and 1.0
+	var totalHouses = "ACS_13_5YR_B19051_with_ann_HD01_VD01";
+	var housesWithIncome = "ACS_13_5YR_B19051_with_ann_HD01_VD02";
+	// Scale the average number of incomes down between 0.0 and 1.0
 	var avgIncomes = [];
 	censusJson.features.forEach(function(feature) {
-		avgIncomes.push(Number(feature.properties.ACS_13_5YR_B19051_with_ann_HD01_VD01));
+		if (Number(feature.properties[housesWithIncome]) > 0) {
+			avgIncomes.push(Number(feature.properties[housesWithIncome]));
+		}
 	});
-	var scale = d3.scaleLinear().domain([d3.min(avgIncomes), d3.max(avgIncomes)]).range([0, 1]);
 
 	censusJson.features.forEach(function(feature) {
 		// Prepare base fill and stroke
 		// fill (color), fill-opacity (0-1), stroke (color), stroke-opacity (0-1), stroke-width (px), title (string)
-		var fillOpacity = scale(feature.properties.ACS_13_5YR_B19051_with_ann_HD01_VD01);
-		var stroke = "rgb(150, 90, 90)", fill = "rgba(200, 90, 90, " + fillOpacity + ")", strokeWidth = "2";
+		var incomePercent = 0;
+		var fillOpacity = 0;
+		if (Number(feature.properties[housesWithIncome]) > 0) {
+			incomePercent = Number(feature.properties[housesWithIncome]) / Number(feature.properties[totalHouses]);
+			fillOpacity = scale(incomePercent); // Scale incomePercent so that there's a visible difference between low and high percentages
+		}
+		console.log(incomePercent);
+		var stroke = "rgb(90, 90, 150)", fill = "rgba(90, 90, 200, " + fillOpacity + ")", strokeWidth = "2";
 
-		// Actually add the calculated fill and stroke to the block
+		// Add the calculated fill and stroke to the block
 		feature.properties.fill = fill;
 		feature.properties.stroke = stroke;
 		feature.properties["stroke-width"] = strokeWidth; // Array key notation here because of the "-"
-		feature.properties.title = "Average income: <span class=\"text-success\">$" + feature.properties.ACS_13_5YR_B19051_with_ann_HD01_VD01 + "</span> biweekly";
+		feature.properties.title = feature.properties["ACS_13_5YR_B01001_with_ann_GEO.display-label"] + "<br>Percentage of houses with income: " + incomePercent;
 	});
 
 	var minMax = [d3.min(avgIncomes), d3.max(avgIncomes)];
@@ -329,6 +337,6 @@ $(document).ready(function() {
 			seen.push(latLng);
 		});
 
-		drawKey([censusJson[1]]);
+		drawKey();
 	});
 });
