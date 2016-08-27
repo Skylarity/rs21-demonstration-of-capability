@@ -128,9 +128,7 @@ function parseFacebookPlacesArray(facebookPlacesArray, bounds) {
 }
 
 // Parses the census block JSON in order to set the style and perform calculations on the actual census data
-function parseCensusJson(censusJson, facebookPlacesArray) {
-	var facebookPlacesJson = parseFacebookPlacesArray(facebookPlacesArray, {"latMin": -90, "latMax": 90, "lngMin": -180, "lngMax": 180});
-
+function parseCensusJson(censusJson) {
 	// Scale the average incomes down between 0.0 and 1.0
 	var avgIncomes = [];
 	censusJson.features.forEach(function(feature) {
@@ -142,21 +140,7 @@ function parseCensusJson(censusJson, facebookPlacesArray) {
 		// Prepare base fill and stroke
 		// fill (color), fill-opacity (0-1), stroke (color), stroke-opacity (0-1), stroke-width (px), title (string)
 		var fillOpacity = scale(feature.properties.ACS_13_5YR_B19051_with_ann_HD01_VD01);
-		var stroke = "rgb(90, 150, 90)", fill = "rgba(90, 200, 90, " + fillOpacity + ")", strokeWidth = "2";
-
-		// If the census block doesn't contain a grocery store or farm, then we'll consider it a food desert
-		var foodDesert = true;
-		console.log(feature.geometry.coordinates);
-		facebookPlacesJson.features.forEach(function(fbFeature) {
-			if (pip(fbFeature.geometry.coordinates, feature.geometry.coordinates[0])) {
-				foodDesert = false;
-			}
-		});
-		if (foodDesert) {
-			stroke = "rgb(150, 90, 90)";
-			fill = "rgba(255, 90, 90, " + fillOpacity + ")";
-			strokeWidth = "3";
-		}
+		var stroke = "rgb(150, 90, 90)", fill = "rgba(200, 90, 90, " + fillOpacity + ")", strokeWidth = "2";
 
 		// Actually add the calculated fill and stroke to the block
 		feature.properties.fill = fill;
@@ -168,33 +152,6 @@ function parseCensusJson(censusJson, facebookPlacesArray) {
 	return [censusJson, d3.min(avgIncomes), d3.max(avgIncomes)];
 }
 
-// Initialized here so that it's accessible in showMarkers()
-var layers;
-var overlays;
-
-function showMarkers() {
-	// Grab all controls
-	var filters = document.getElementById("marker-form").filters;
-
-	// Create a list of currently enabled markers
-	var markerList = [];
-	for (var i = 0; i < filters.length; i++) {
-		if (filters[i].checked) markerList.push(filters[i].value);
-	}
-
-	// Clear any current markers
-	overlays.clearLayers();
-
-	// Create a new marker group
-	var clusterGroup = new L.MarkerClusterGroup().addTo(overlays);
-	// Add any markers that fit the filtered criteria to that group
-	layers.eachLayer(function(layer) {
-		if (list.indexOf(layer.feature.properties.line) !== -1) {
-			clusterGroup.addLayer(layer);
-		}
-	});
-}
-
 $(document).ready(function() {
 	// Creates the map!
 	L.mapbox.accessToken = "pk.eyJ1Ijoic2t5bGFyaXR5IiwiYSI6ImNpczI4ZHBmbzAwMzgyeWxrZmZnMGI5ZXYifQ.1-jGFvM11OgVgYkz3WvoNw";
@@ -204,10 +161,9 @@ $(document).ready(function() {
 	overlays = L.layerGroup().addTo(map);
 
 	// Load data and do stuff with it
-	$.when(loadCSV("data/FacebookPlaces_Albuquerque.csv"), loadCSV("data/Twitter_141103.csv"), loadJSON("data/BernallioCensusBlocks_Joined.json")).done(function(csv1, csv2, json) {
-		var facebookPlacesArray = $.csv.toArrays(csv1[0]);
-		var tweetArray = $.csv.toArrays(csv2[0]);
-		var censusJson = parseCensusJson(json[0], facebookPlacesArray);
+	$.when(loadCSV("data/FacebookPlaces_Albuquerque.csv"), loadJSON("data/BernallioCensusBlocks_Joined.json")).done(function(csv, json) {
+		var facebookPlacesArray = $.csv.toArrays(csv[0]);
+		var censusJson = parseCensusJson(json[0]);
 
 		// Grabs the bounds of the census blocks
 		var bernalilloBounds = function(json) {
@@ -250,26 +206,8 @@ $(document).ready(function() {
 				});
 			}
 		});
-		facebookPlacesGeoJSON = L.mapbox.featureLayer().setGeoJSON(parseFacebookPlacesArray(facebookPlacesArray, bernalilloBounds(censusJson[0]))).on("ready", function(e) {
-			layers = e.target;
-		});
+		facebookPlacesGeoJSON = L.mapbox.featureLayer().setGeoJSON(parseFacebookPlacesArray(facebookPlacesArray, bernalilloBounds(censusJson[0])));
 		facebookPlacesCluster.addLayer(facebookPlacesGeoJSON);
 		map.addLayer(facebookPlacesCluster);
-
-		// Tweet marker cluster
-		// tweetCluster = new L.MarkerClusterGroup({
-		// 	iconCreateFunction: function(cluster) {
-		// 		return new L.DivIcon({
-		// 			iconSize: [80, 30],
-		// 			html: "<div class=\"cluster-marker twitter-marker\"><i class=\"fa fa-sm fa-twitter\"></i> " + cluster.getChildCount() + "</div>"
-		// 		});
-		// 	}
-		// });
-		// tweetGeoJSON = L.mapbox.featureLayer().setGeoJSON(parseTweetArray(tweetArray, bernalilloBounds(censusJson[0]))).on("ready", function(e) {
-		// 	layers = e.target;
-		// 	showMarkers();
-		// });
-		// tweetCluster.addLayer(tweetGeoJSON);
-		// map.addLayer(tweetCluster);
 	});
 });
