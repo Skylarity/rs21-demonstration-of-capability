@@ -76,7 +76,7 @@ function drawKey(minMax) {
 		.style("fill", "url(#incomeGradient)");
 
 	// Define income bar labels
-	var textMin = "$" + minMax[0] + "/mo", textMax = "$" + minMax[1] + "/mo";
+	var textMin = "$" + minMax[0] + " biweekly", textMax = "$" + minMax[1] + " biweekly";
 	var incomeTextMax = svg.append("text")
 		.attr("x", ((width / 10) + 10))
 		.attr("y", 15)
@@ -227,7 +227,7 @@ function parseCensusJson(censusJson) {
 		feature.properties.fill = fill;
 		feature.properties.stroke = stroke;
 		feature.properties["stroke-width"] = strokeWidth; // Array key notation here because of the "-"
-		feature.properties.title = "Average income: <span class=\"text-success\">$" + feature.properties.ACS_13_5YR_B19051_with_ann_HD01_VD01 + "</span> per month";
+		feature.properties.title = "Average income: <span class=\"text-success\">$" + feature.properties.ACS_13_5YR_B19051_with_ann_HD01_VD01 + "</span> biweekly";
 	});
 
 	var minMax = [d3.min(avgIncomes), d3.max(avgIncomes)];
