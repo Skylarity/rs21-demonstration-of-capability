@@ -28,7 +28,7 @@ There are a few things that I would have done to take this project further.
 
 1. The Facebook Places provided to me don't classify all grocery stores/farmer's markets/etc. as such (ex. Smith's is classified as a local business). In order to fix this, I could pull the city's building permit and/or business license data in order to see exactly what is and is not a "healthy food source".
 
-2. I used dataset `B19051` to display number of houses with income as a representation of poverty level. I would have rather used dataset `B19052` for this comparison, as it actually shows income level.
+2. I used dataset `B19051` (Earnings In The Past 12 Months For Households) to display number of houses with income as a representation of poverty level. I would have rather used dataset `B19052` (Wage Or Salary Income In The Past 12 Months For Households) for this comparison, as it actually shows income level.
 
 3. The census data provided to me was at the county level, but the Facebook Places were contained within Albuquerque. For a project that would actually go to a client I would prefer to use datasets with the same sample area.
 
