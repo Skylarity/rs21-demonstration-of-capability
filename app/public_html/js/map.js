@@ -211,13 +211,16 @@ function parseFacebookPlacesArray(facebookPlacesArray, bounds) {
 function parseCensusJson(censusJson) {
 	var totalHouses = "ACS_13_5YR_B19051_with_ann_HD01_VD01";
 	var housesWithIncome = "ACS_13_5YR_B19051_with_ann_HD01_VD02";
+
 	// Scale the average number of incomes down between 0.0 and 1.0
 	var avgIncomes = [];
 	censusJson.features.forEach(function(feature) {
 		if (Number(feature.properties[housesWithIncome]) > 0) {
-			avgIncomes.push(Number(feature.properties[housesWithIncome]));
+			avgIncomes.push(Number(feature.properties[housesWithIncome]) / Number(feature.properties[totalHouses]));
 		}
 	});
+	console.log(d3.min(avgIncomes));
+	var scale = d3.scaleLinear().domain([d3.min(avgIncomes), d3.max(avgIncomes)]).range([0, 1]);
 
 	censusJson.features.forEach(function(feature) {
 		// Prepare base fill and stroke
@@ -228,14 +231,13 @@ function parseCensusJson(censusJson) {
 			incomePercent = Number(feature.properties[housesWithIncome]) / Number(feature.properties[totalHouses]);
 			fillOpacity = scale(incomePercent); // Scale incomePercent so that there's a visible difference between low and high percentages
 		}
-		console.log(incomePercent);
 		var stroke = "rgb(90, 90, 150)", fill = "rgba(90, 90, 200, " + fillOpacity + ")", strokeWidth = "2";
 
 		// Add the calculated fill and stroke to the block
 		feature.properties.fill = fill;
 		feature.properties.stroke = stroke;
 		feature.properties["stroke-width"] = strokeWidth; // Array key notation here because of the "-"
-		feature.properties.title = feature.properties["ACS_13_5YR_B01001_with_ann_GEO.display-label"] + "<br>Percentage of houses with income: " + incomePercent;
+		feature.properties.title = feature.properties["ACS_13_5YR_B01001_with_ann_GEO.display-label"] + "<br>Houses with income: " + String(incomePercent.toFixed(4) * 100).substr(0, 5) + "%";
 	});
 
 	var minMax = [d3.min(avgIncomes), d3.max(avgIncomes)];
