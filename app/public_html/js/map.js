@@ -14,6 +14,27 @@ function loadJSON(jsonUrl) {
 	});
 }
 
+// Point in polygon (@see https://github.com/substack/point-in-polygon)
+function pip(point, vs) {
+	// ray-casting algorithm based on
+	// http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
+
+	var x = point[0], y = point[1];
+
+	var inside = false;
+	for (var i = 0, j = vs.length - 1; i < vs.length; j = i++) {
+		var xi = vs[i][0], yi = vs[i][1];
+		var xj = vs[j][0], yj = vs[j][1];
+
+		var intersect = ((yi > y) != (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+			if (intersect) {
+				inside = !inside;
+			}
+	}
+
+	return inside;
+}
+
 // Parses the array of tweets and turns them into useful GeoJSON
 function parseTweetArray(tweetArray, bounds) {
 	tweetJson = {
@@ -195,14 +216,34 @@ $(document).ready(function() {
 		seen = [];
 		facebookPlacesGeoJSON._geojson.features.forEach(function(feature) {
 			var latLng = [feature.geometry.coordinates[1], feature.geometry.coordinates[0]]; // Have to reverse the coordinates
+
+			// Make sure places right next to eachother don't cause a ton of circles in the same place
+			var distance = 0.00417; // 1/4 mile in degrees
+			var area = [
+				[Number(latLng[0]) + distance, Number(latLng[1]) + distance],
+				[Number(latLng[0]) + distance, Number(latLng[1]) - distance],
+				[Number(latLng[0]) - distance, Number(latLng[1]) - distance],
+				[Number(latLng[0]) - distance, Number(latLng[1]) + distance]
+			];
+			var notTooClose = true;
+			seen.forEach(function(seenArea) {
+				if (pip(latLng, seenArea)) {
+					notTooClose = false;
+				}
+			});
+			seen.push(area);
+
+			// Food deserts are places > 1 mile away from healthy food sources
 			var mileInMeters = 1609.34;
+
 			var options = {
 				"fillColor": "rgb(90, 200, 90)",
 				"fillOpacity": 0.5,
 				"stroke": false,
 				"clickable": false
 			};
-			if ($.inArray(latLng, seen) === -1) {
+
+			if (notTooClose) {
 				L.circle(latLng, mileInMeters, options).addTo(map);
 			}
 			seen.push(latLng);
