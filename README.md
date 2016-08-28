@@ -2,7 +2,7 @@
 
 [View the project](https://skylerrexroad.com/~skyler/rs21/app/public_html/)
 
-[View the source code](https://github.com/Skylarity/rs21-demonstration-of-capability)
+[View the source](https://github.com/Skylarity/rs21-demonstration-of-capability)
 
 ![Screenshot of project](https://raw.githubusercontent.com/Skylarity/rs21-demonstration-of-capability/master/documentation-images/screenshot.png)
 
